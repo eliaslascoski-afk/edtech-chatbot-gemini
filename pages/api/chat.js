@@ -1,81 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const SITE_PAGES = [
-  'https://sites.google.com/view/conteudosedtech/guia',
-  'https://sites.google.com/view/conteudosedtech/pad',
-  'https://sites.google.com/view/conteudosedtech/rev',
-  'https://sites.google.com/view/conteudosedtech/nor',
-  'https://sites.google.com/view/conteudosedtech/hum',
-  'https://sites.google.com/view/conteudosedtech/ger',
-  'https://sites.google.com/view/conteudosedtech/lin',
-  'https://sites.google.com/view/conteudosedtech/doc',
-];
+const DOC_ID = '1TLANzH4fjZ7RZN7i5cj_G4yiwWRCxL5l';
 
-let cachedContext = null;
+let cachedDoc = null;
 let cacheTime = 0;
-const CACHE_TTL = 60 * 60 * 1000;
+const CACHE_TTL = 60 * 60 * 1000; // 1 hora
 
-async function fetchPageText(url) {
+async function fetchGuiaDoc() {
+  const now = Date.now();
+  if (cachedDoc && now - cacheTime < CACHE_TTL) return cachedDoc;
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'EdTechBot/1.0' } });
-    const html = await res.text();
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    return `[${url}]\n${text.substring(0, 2000)}`;
+    const url = `https://docs.google.com/document/d/${DOC_ID}/export?format=txt`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'EdTechBot/1.0' },
+      redirect: 'follow',
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    cachedDoc = text;
+    cacheTime = now;
+    return cachedDoc;
   } catch (e) {
-    return `[${url}] Erro ao acessar.`;
+    console.error('Erro ao buscar Google Doc:', e.message);
+    return null;
   }
 }
-
-async function getSiteContext() {
-  const now = Date.now();
-  if (cachedContext && now - cacheTime < CACHE_TTL) return cachedContext;
-  const results = await Promise.all(SITE_PAGES.map(fetchPageText));
-  cachedContext = results.join('\n\n---\n\n');
-  cacheTime = now;
-  return cachedContext;
-}
-
-const STATIC_KNOWLEDGE = `
-=== GUIA DE ESTILO EDTECH - VITRU EDUCACAO ===
-PADRONIZACAO (PAD):
-- Titulos sem ponto final
-- Sem recuo nem linha em branco entre paragrafos
-- Retirar flexoes entre parenteses: professor(a) -> professor
-- Leitor: "estudante", sempre singular
-- Autor: primeira pessoa do singular
-- Uma citacao longa obrigatoria
-- Evitar UNIASSELVI/UniCesumar
-- Marcador de texto: ate 2 por pagina
-- Negrito para destaques, italico para softwares
-- Numeros ate 10 por extenso
-- Crase antes de pronome possessivo
-- "onde" -> "em que"
-- "atraves" -> "por meio de"
-- "junto com" -> "com"
-- Hifen para intervalos: p. 22-23
-REVISAO (REV):
-- Ortografia, gramatica, coerencia, coesao, clareza
-- Frases curtas (max 25 palavras)
-- Evitar voz passiva excessiva
-- Checklist: concordancia, pontuacao, virgulas
-NORMATIZACAO (NOR) - ABNT:
-- Citacoes curtas (<= 3 linhas): aspas duplas no texto
-- Citacoes longas (4+ linhas): recuo 4cm, fonte 10pt, sem aspas
-- NBR 10520:2023 - Citacoes
-- NBR 14724:2024 - Trabalhos academicos
-- NBR 6023:2025 - Referencias
-- Referencias: SOBRENOME, Nome. Titulo. Edicao. Local: Editora, Ano.
-HUMANIZACAO (HUM):
-- Textos empaticos, acolhedores, segunda pessoa (voce)
-- Evitar linguagem robotica
-- Storytelling, exemplos praticos, tom conversacional
-- Remover cliches de IA, variar estrutura de frases
-`;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -84,27 +33,31 @@ export default async function handler(req, res) {
   const { message, history } = req.body;
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
   try {
-    const siteContext = await getSiteContext();
+    const docText = await fetchGuiaDoc();
+
+    const docSection = docText
+      ? `=== GUIA DE ESTILO COMPLETO (documento oficial) ===\n${docText}`
+      : `=== AVISO: nao foi possivel acessar o documento do Guia. Responda apenas com o conhecimento estatico abaixo. ===`;
+
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash-lite',
       systemInstruction: `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
 
-REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no Guia de Estilo da Vitru Educacao, fornecidas abaixo em STATIC_KNOWLEDGE e no CONTEUDO DO SITE. NAO utilize conhecimento externo, conhecimento geral, normas de outras fontes ou qualquer informacao que nao esteja explicitamente presente nessas duas fontes. Se a resposta nao estiver nas fontes abaixo, aplique o fallback obrigatorio.
+REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no documento oficial do Guia de Estilo da Vitru Educacao, fornecido abaixo. NAO utilize conhecimento externo, conhecimento geral ou qualquer informacao que nao esteja explicitamente presente no documento. Nunca invente ou infira regras que nao estejam escritas no documento.
 
 OUTRAS REGRAS:
 - Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
 - Seja conciso: ate 300 palavras por resposta.
-- Nunca invente ou infira regras que nao estejam explicitamente escritas nas fontes abaixo.
-- Se a pergunta for sobre ABNT, responda apenas com o que estiver descrito nas fontes abaixo. Nao acrescente interpretacoes proprias.
+- Quando citar uma regra, indique de qual secao do guia ela vem, se possivel.
+- Se a pergunta for sobre ABNT, responda apenas com o que estiver descrito no documento.
 
-FALLBACK OBRIGATORIO — use esta resposta exata quando o assunto nao estiver nas fontes abaixo:
+FALLBACK OBRIGATORIO — use esta resposta exata quando o assunto nao estiver no documento:
 "Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia (https://sites.google.com/view/conteudosedtech/doc) ou entrar em contato diretamente com o responsavel pelo botao CHAT no rodape da pagina do Guia."
 
-${STATIC_KNOWLEDGE}
-=== CONTEUDO DO SITE (via crawler) ===
-${siteContext}`,
+${docSection}`,
     });
+
     const rawHistory = (history || []).map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.text }],
