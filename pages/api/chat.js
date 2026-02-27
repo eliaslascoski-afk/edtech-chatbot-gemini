@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const DOC_ID = '1TLANzH4fjZ7RZN7i5cj_G4yiwWRCxL5l';
+const DOC_ID = '1TLANzH4fjZ7RZN7i5cj_G4yiwWRCxL51';
 
 let cachedDoc = null;
 let cacheTime = 0;
@@ -34,30 +34,23 @@ export default async function handler(req, res) {
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
   try {
     const docText = await fetchGuiaDoc();
-
     const docSection = docText
       ? `=== GUIA DE ESTILO COMPLETO (documento oficial) ===\n${docText}`
       : `=== AVISO: nao foi possivel acessar o documento do Guia. Responda apenas com o conhecimento estatico abaixo. ===`;
-
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash-8b',
       systemInstruction: `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
-
 REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no documento oficial do Guia de Estilo da Vitru Educacao, fornecido abaixo. NAO utilize conhecimento externo, conhecimento geral ou qualquer informacao que nao esteja explicitamente presente no documento. Nunca invente ou infira regras que nao estejam escritas no documento.
-
 OUTRAS REGRAS:
 - Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
 - Seja conciso: ate 300 palavras por resposta.
 - Quando citar uma regra, indique de qual secao do guia ela vem, se possivel.
 - Se a pergunta for sobre ABNT, responda apenas com o que estiver descrito no documento.
-
-FALLBACK OBRIGATORIO — use esta resposta exata quando o assunto nao estiver no documento:
+FALLBACK OBRIGATORIO - use esta resposta exata quando o assunto nao estiver no documento:
 "Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia (https://sites.google.com/view/conteudosedtech/doc) ou entrar em contato diretamente com o responsavel pelo botao CHAT no rodape da pagina do Guia."
-
 ${docSection}`,
     });
-
     const rawHistory = (history || []).map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.text }],
