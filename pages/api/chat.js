@@ -33,21 +33,17 @@ export default async function handler(req, res) {
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
   try {
     const docText = await fetchGuiaDoc();
-    const docSection = docText
-      ? `=== GUIA DE ESTILO COMPLETO (documento oficial) ===\n${docText}`
-      : `=== AVISO: nao foi possivel acessar o documento do Guia. Responda apenas com o conhecimento estatico abaixo. ===`;
-    const systemInstruction = `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
-REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no documento oficial do Guia de Estilo da Vitru Educacao, fornecido abaixo. NAO utilize conhecimento externo, conhecimento geral ou qualquer informacao que nao esteja explicitamente presente no documento. Nunca invente ou infira regras que nao estejam escritas no documento.
+    const systemText = `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
+REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no documento oficial do Guia de Estilo da Vitru Educacao, fornecido abaixo. NAO utilize conhecimento externo. Nunca invente regras que nao estejam escritas no documento.
 OUTRAS REGRAS:
 - Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
 - Seja conciso: ate 300 palavras por resposta.
 - Quando citar uma regra, indique de qual secao do guia ela vem, se possivel.
-- Se a pergunta for sobre ABNT, responda apenas com o que estiver descrito no documento.
 FALLBACK OBRIGATORIO - use esta resposta exata quando o assunto nao estiver no documento:
-"Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia (https://sites.google.com/view/conteudosedtech/doc) ou entrar em contato diretamente com o responsavel pelo botao CHAT no rodape da pagina do Guia."
-${docSection}`;
+"Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia ou entrar em contato diretamente com o responsavel."
+${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: documento indisponivel no momento ==='}}`;
     const apiKey = process.env.GEMINI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
     const rawHistory = (history || []).map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.text }],
@@ -60,7 +56,7 @@ ${docSection}`;
       { role: 'user', parts: [{ text: message }] },
     ];
     const body = {
-      system_instruction: { parts: [{ text: systemInstruction }] },
+      system_instruction: { parts: [{ text: systemText }] },
       contents,
       generationConfig: { maxOutputTokens: 1024 },
     };
