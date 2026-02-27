@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const SITE_PAGES = [
   'https://sites.google.com/view/conteudosedtech/guia',
@@ -82,7 +82,7 @@ DOCUMENTACAO (DOC):
 - Espacamento: 1,5 entrelinhas no corpo; simples em citacoes longas e referencias
 `;
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
@@ -107,26 +107,18 @@ ${STATIC_KNOWLEDGE}
 ${siteContext}`,
     });
 
-    // Build history ensuring it starts with 'user' role (Gemini requirement)
-    let rawHistory = (history || []).filter((msg) => msg.role !== 'assistant' || true);
-    const geminiHistory = rawHistory
-      .map((msg) => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.text }],
-      }))
-      .filter((msg, index, arr) => {
-        // Remove leading model messages
-        if (index === 0 && msg.role === 'model') return false;
-        // Ensure alternating pattern starting with user
-        return true;
-      });
+    // Build Gemini history - must start with 'user' role
+    const rawHistory = (history || []).map((msg) => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.text }],
+    }));
 
-    // Drop history items until first user message
-    while (geminiHistory.length > 0 && geminiHistory[0].role === 'model') {
-      geminiHistory.shift();
+    // Remove leading model messages (Gemini requires history to start with user)
+    while (rawHistory.length > 0 && rawHistory[0].role === 'model') {
+      rawHistory.shift();
     }
 
-    const chat = model.startChat({ history: geminiHistory });
+    const chat = model.startChat({ history: rawHistory });
     const result = await chat.sendMessage(message);
     const reply = result.response.text();
     return res.status(200).json({ reply });
@@ -134,4 +126,4 @@ ${siteContext}`,
     console.error('Erro Gemini:', error.message || error);
     return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
   }
-};
+}
