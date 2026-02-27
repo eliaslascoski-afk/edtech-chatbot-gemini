@@ -93,9 +93,9 @@ export default async function handler(req, res) {
   try {
     const siteContext = await getSiteContext();
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-    const systemPrompt = `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash-lite',
+      systemInstruction: `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
 Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
 Use as fontes de conhecimento abaixo para responder com precisao.
 Se a pergunta for sobre ABNT, cite a norma especifica (NBR 10520:2023, NBR 14724:2024 ou NBR 6023:2025).
@@ -104,7 +104,8 @@ Seja conciso: ate 300 palavras por resposta.
 Nunca invente regras ou normas.
 ${STATIC_KNOWLEDGE}
 === CONTEUDO DO SITE (via crawler) ===
-${siteContext}`;
+${siteContext}`,
+    });
 
     // Build Gemini history - must start with 'user' role
     const rawHistory = (history || []).map((msg) => ({
@@ -117,19 +118,8 @@ ${siteContext}`;
       rawHistory.shift();
     }
 
-    // For gemini-pro, prepend system prompt as first user message if no history
-    const fullHistory = rawHistory.length > 0 ? rawHistory : [];
-
-    const chat = model.startChat({
-      history: fullHistory,
-      generationConfig: { maxOutputTokens: 800 },
-    });
-
-    const fullMessage = rawHistory.length === 0
-      ? `${systemPrompt}\n\nPergunta do usuario: ${message}`
-      : message;
-
-    const result = await chat.sendMessage(fullMessage);
+    const chat = model.startChat({ history: rawHistory });
+    const result = await chat.sendMessage(message);
     const reply = result.response.text();
     return res.status(200).json({ reply });
   } catch (error) {
