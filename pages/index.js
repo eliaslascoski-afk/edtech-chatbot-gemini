@@ -70,7 +70,7 @@ export default function Home() {
 
   return (
     <div style={s.container}>
-      {/* Area de mensagens — scroll INTERNO quando o conteudo exceder */}
+      {/* Area de mensagens: so aparece quando ha conteudo, cresce ate o limite disponivel */}
       {(messages.length > 0 || loading) && (
         <div ref={messagesRef} style={s.messages}>
           {messages.map((msg, i) => (
@@ -93,7 +93,7 @@ export default function Home() {
           )}
         </div>
       )}
-      {/* Linha de input */}
+      {/* Campo de input fixo na base */}
       <div style={s.inputRow}>
         <textarea
           ref={textareaRef}
@@ -115,6 +115,7 @@ export default function Home() {
 
 const s = {
   container: {
+    position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
@@ -127,10 +128,9 @@ const s = {
     overflow: 'hidden',
     border: '1px solid #d8c8e0',
     borderRadius: '12px',
-    justifyContent: 'flex-end',
   },
   messages: {
-    flex: '0 1 auto',
+    flex: '1 1 auto',
     overflowY: 'auto',
     overflowX: 'hidden',
     padding: '14px 14px 8px 14px',
@@ -157,7 +157,8 @@ const s = {
     background: '#faf8fc',
     flexShrink: 0,
     alignItems: 'flex-end',
-    borderRadius: '12px',
+    borderRadius: '0 0 12px 12px',
+    marginTop: 'auto',
   },
   textarea: {
     flex: 1,
