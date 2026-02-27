@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     const siteContext = await getSiteContext();
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-exp',
+      model: 'gemini-2.5-flash-lite',
       systemInstruction: `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao. Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva. Use as fontes de conhecimento abaixo para responder com precisao. Se a pergunta for sobre ABNT, cite a norma especifica (NBR 10520:2023, NBR 14724:2024 ou NBR 6023:2025). Se nao souber, oriente o usuario a consultar o guia completo ou contactar Elias Lascoski. Seja conciso: ate 300 palavras por resposta. Nunca invente regras ou normas.
 
 ${STATIC_KNOWLEDGE}
