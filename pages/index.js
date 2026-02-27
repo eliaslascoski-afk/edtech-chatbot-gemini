@@ -41,7 +41,7 @@ export default function Home() {
         <div ref={bottomRef} />
       </div>
       <div style={s.inputRow}>
-        <textarea style={s.textarea} rows={2} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Digite sua duvida sobre o Guia EdTech..." disabled={loading} />
+        <textarea style={s.textarea} rows={5} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKey} placeholder="Digite sua duvida sobre o Guia EdTech..." disabled={loading} />
         <button style={s.button} onClick={sendMessage} disabled={loading}>{loading ? '...' : 'Enviar'}</button>
       </div>
     </div>
@@ -51,9 +51,9 @@ export default function Home() {
 const s = {
   container: { display: 'flex', flexDirection: 'column', maxWidth: '720px', margin: '0 auto', fontFamily: 'sans-serif', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' },
   header: { background: '#7B2D8B', color: '#fff', padding: '14px 20px', fontSize: '17px', fontWeight: 'bold', flexShrink: 0 },
-  messagesBase: { maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' },
+  messagesBase: { maxHeight: '2100px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' },
   bubble: { maxWidth: '82%', padding: '10px 14px', borderRadius: '16px', lineHeight: 1.55, fontSize: '15px', whiteSpace: 'pre-wrap' },
   inputRow: { display: 'flex', gap: '8px', padding: '12px 16px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 },
   textarea: { flex: 1, resize: 'none', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', fontFamily: 'sans-serif' },
-  button: { background: '#7B2D8B', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
+  button: { background: '#7B2D8B', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', alignSelf: 'flex-end' },
 };
