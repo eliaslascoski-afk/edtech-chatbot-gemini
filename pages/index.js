@@ -59,7 +59,7 @@ export default function Home() {
       <div style={s.box}>
         <div ref={messagesRef} style={s.messages}>
           {messages.length === 0 && !loading && (
-            <div style={s.placeholder}>Ola! Digite sua duvida sobre o Guia EdTech.</div>
+            <div style={s.placeholder}>Suas respostas aparecerão aqui!</div>
           )}
           {messages.map((msg, i) => (
             <div
@@ -88,7 +88,7 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Digite sua duvida sobre o Guia EdTech..."
+            placeholder="Digite sua dúvida sobre o Guia EdTech..."
             disabled={loading}
           />
           <button
@@ -139,7 +139,7 @@ const s = {
   placeholder: {
     color: '#9e87aa',
     fontSize: '14px',
-    fontStyle: 'italic',
+    fontStyle: 'normal',
     alignSelf: 'flex-start',
     padding: '4px 2px',
   },
