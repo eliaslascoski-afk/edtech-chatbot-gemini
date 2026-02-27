@@ -8,29 +8,31 @@ export default function Home() {
   const textareaRef = useRef(null);
   const messagesRef = useRef(null);
 
-  // Remove scroll externo do iframe (html e body)
+  // Remove scroll externo do iframe
   useEffect(() => {
-    document.documentElement.style.height = '100%';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.height = '100%';
-    document.body.style.overflow = 'hidden';
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
+    const els = [document.documentElement, document.body];
+    els.forEach((el) => {
+      el.style.height = '100%';
+      el.style.width = '100%';
+      el.style.margin = '0';
+      el.style.padding = '0';
+      el.style.overflow = 'hidden';
+    });
   }, []);
 
-  // Scroll interno da area de mensagens
+  // Scroll interno: rola para a ultima mensagem
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, loading]);
 
-  // Auto-resize da textarea: cresce com o texto, sem barra de rolagem
+  // Auto-resize da textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
 
   async function sendMessage() {
@@ -46,9 +48,15 @@ export default function Home() {
         body: JSON.stringify({ message: text, history: messages }),
       });
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: 'assistant', text: data.reply ?? data.error ?? 'Erro.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: data.reply ?? data.error ?? 'Erro.' },
+      ]);
     } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', text: 'Erro de conexao. Tente novamente.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Erro de conexao. Tente novamente.' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -63,17 +71,18 @@ export default function Home() {
 
   return (
     <div style={s.container}>
-      <div style={s.header}>
-        <span>Assistente de estilo EdTech</span>
-      </div>
+      {/* Area de mensagens — scroll INTERNO quando o conteudo exceder */}
       <div ref={messagesRef} style={s.messages}>
+        {messages.length === 0 && !loading && (
+          <div style={s.empty}>Assistente de estilo EdTech</div>
+        )}
         {messages.map((msg, i) => (
           <div
             key={i}
             style={{
               ...s.bubble,
               alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              background: msg.role === 'user' ? '#804090' : '#f1f5f9',
+              background: msg.role === 'user' ? '#804090' : '#ede9f0',
               color: msg.role === 'user' ? '#fff' : '#1e293b',
             }}
           >
@@ -81,12 +90,14 @@ export default function Home() {
           </div>
         ))}
         {loading && (
-          <div style={{ ...s.bubble, alignSelf: 'flex-start', background: '#f1f5f9', color: '#64748b' }}>
+          <div style={{ ...s.bubble, alignSelf: 'flex-start', background: '#ede9f0', color: '#7a6080' }}>
             Consultando o guia...
           </div>
         )}
         <div ref={bottomRef} />
       </div>
+
+      {/* Linha de input */}
       <div style={s.inputRow}>
         <textarea
           ref={textareaRef}
@@ -95,10 +106,10 @@ export default function Home() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Digite sua dúvida sobre o Guia EdTech..."
+          placeholder="Digite sua duvida sobre o Guia EdTech..."
           disabled={loading}
         />
-        <button style={s.button} onClick={sendMessage} disabled={loading}>
+        <button style={loading ? { ...s.button, opacity: 0.6 } : s.button} onClick={sendMessage} disabled={loading}>
           {loading ? '...' : 'Enviar'}
         </button>
       </div>
@@ -113,71 +124,82 @@ const s = {
     height: '100%',
     width: '100%',
     margin: '0',
+    padding: '0',
     fontFamily: "'PT Sans', sans-serif",
     background: '#fff',
     boxSizing: 'border-box',
     overflow: 'hidden',
-  },
-  header: {
-    background: '#804090',
-    color: '#fff',
-    padding: '14px 20px',
-    fontSize: '17px',
-    fontWeight: 'bold',
-    flexShrink: 0,
+    border: '1px solid #d8c8e0',
+    borderRadius: '12px',
   },
   messages: {
     flex: 1,
     overflowY: 'auto',
-    padding: '16px',
+    overflowX: 'hidden',
+    padding: '14px 14px 8px 14px',
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
     minHeight: 0,
   },
+  empty: {
+    textAlign: 'center',
+    color: '#b09ac0',
+    fontSize: '13px',
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    padding: '20px',
+    fontStyle: 'italic',
+  },
   bubble: {
-    maxWidth: '82%',
-    padding: '10px 14px',
-    borderRadius: '16px',
-    lineHeight: 1.55,
+    maxWidth: '88%',
+    padding: '9px 13px',
+    borderRadius: '14px',
+    lineHeight: 1.5,
     fontSize: '14px',
     whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
     fontFamily: "'PT Sans', sans-serif",
   },
   inputRow: {
     display: 'flex',
     gap: '8px',
-    padding: '12px 16px',
-    borderTop: '1px solid #e2e8f0',
-    background: '#f8fafc',
+    padding: '10px 12px',
+    borderTop: '1px solid #e8dff0',
+    background: '#faf8fc',
     flexShrink: 0,
     alignItems: 'flex-end',
+    borderRadius: '0 0 12px 12px',
   },
   textarea: {
     flex: 1,
     resize: 'none',
     overflow: 'hidden',
-    minHeight: '44px',
-    maxHeight: '200px',
-    padding: '10px 12px',
-    borderRadius: '10px',
-    border: '1px solid #cbd5e1',
+    minHeight: '38px',
+    maxHeight: '120px',
+    padding: '8px 11px',
+    borderRadius: '8px',
+    border: '1px solid #c9b8d8',
     fontSize: '14px',
     outline: 'none',
     fontFamily: "'PT Sans', sans-serif",
-    lineHeight: '1.5',
+    lineHeight: '1.45',
     boxSizing: 'border-box',
+    background: '#fff',
+    color: '#2d1a3a',
   },
   button: {
     background: '#804090',
     color: '#fff',
     border: 'none',
-    borderRadius: '10px',
-    padding: '10px 20px',
+    borderRadius: '8px',
+    padding: '8px 16px',
     cursor: 'pointer',
     fontWeight: 'bold',
     fontSize: '14px',
     fontFamily: "'PT Sans', sans-serif",
     flexShrink: 0,
+    alignSelf: 'flex-end',
+    minHeight: '38px',
   },
 };
