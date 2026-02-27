@@ -24,10 +24,16 @@ export default function Home() {
 
   function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
 
+  const messagesStyle = {
+    ...s.messagesBase,
+    minHeight: messages.length > 0 || loading ? '60px' : '0px',
+    padding: messages.length > 0 || loading ? '16px' : '0px',
+  };
+
   return (
     <div style={s.container}>
       <div style={s.header}><span>Assistente EdTech - Guia de Estilo Vitru</span></div>
-      <div style={s.messages}>
+      <div style={messagesStyle}>
         {messages.map((msg, i) => (
           <div key={i} style={{ ...s.bubble, alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', background: msg.role === 'user' ? '#7B2D8B' : '#f1f5f9', color: msg.role === 'user' ? '#fff' : '#1e293b' }}>{msg.text}</div>
         ))}
@@ -43,11 +49,11 @@ export default function Home() {
 }
 
 const s = {
-  container: { display: 'flex', flexDirection: 'column', height: '100vh', maxWidth: '720px', margin: '0 auto', fontFamily: 'sans-serif', background: '#fff' },
-  header: { background: '#7B2D8B', color: '#fff', padding: '14px 20px', fontSize: '17px', fontWeight: 'bold' },
-  messages: { flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' },
+  container: { display: 'flex', flexDirection: 'column', maxWidth: '720px', margin: '0 auto', fontFamily: 'sans-serif', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' },
+  header: { background: '#7B2D8B', color: '#fff', padding: '14px 20px', fontSize: '17px', fontWeight: 'bold', flexShrink: 0 },
+  messagesBase: { maxHeight: '420px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' },
   bubble: { maxWidth: '82%', padding: '10px 14px', borderRadius: '16px', lineHeight: 1.55, fontSize: '15px', whiteSpace: 'pre-wrap' },
-  inputRow: { display: 'flex', gap: '8px', padding: '12px 16px', borderTop: '1px solid #e2e8f0', background: '#f8fafc' },
+  inputRow: { display: 'flex', gap: '8px', padding: '12px 16px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 },
   textarea: { flex: 1, resize: 'none', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', fontFamily: 'sans-serif' },
   button: { background: '#7B2D8B', color: '#fff', border: 'none', borderRadius: '10px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' },
 };
