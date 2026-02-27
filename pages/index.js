@@ -4,7 +4,6 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
   const textareaRef = useRef(null);
   const messagesRef = useRef(null);
 
@@ -72,31 +71,28 @@ export default function Home() {
   return (
     <div style={s.container}>
       {/* Area de mensagens — scroll INTERNO quando o conteudo exceder */}
-      <div ref={messagesRef} style={s.messages}>
-        {messages.length === 0 && !loading && (
-          <div style={s.empty}>Assistente de estilo EdTech</div>
-        )}
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              ...s.bubble,
-              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              background: msg.role === 'user' ? '#804090' : '#ede9f0',
-              color: msg.role === 'user' ? '#fff' : '#1e293b',
-            }}
-          >
-            {msg.text}
-          </div>
-        ))}
-        {loading && (
-          <div style={{ ...s.bubble, alignSelf: 'flex-start', background: '#ede9f0', color: '#7a6080' }}>
-            Consultando o guia...
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
+      {(messages.length > 0 || loading) && (
+        <div ref={messagesRef} style={s.messages}>
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              style={{
+                ...s.bubble,
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                background: msg.role === 'user' ? '#804090' : '#ede9f0',
+                color: msg.role === 'user' ? '#fff' : '#1e293b',
+              }}
+            >
+              {msg.text}
+            </div>
+          ))}
+          {loading && (
+            <div style={{ ...s.bubble, alignSelf: 'flex-start', background: '#ede9f0', color: '#7a6080' }}>
+              Consultando o guia...
+            </div>
+          )}
+        </div>
+      )}
       {/* Linha de input */}
       <div style={s.inputRow}>
         <textarea
@@ -131,9 +127,10 @@ const s = {
     overflow: 'hidden',
     border: '1px solid #d8c8e0',
     borderRadius: '12px',
+    justifyContent: 'flex-end',
   },
   messages: {
-    flex: 1,
+    flex: '0 1 auto',
     overflowY: 'auto',
     overflowX: 'hidden',
     padding: '14px 14px 8px 14px',
@@ -141,15 +138,6 @@ const s = {
     flexDirection: 'column',
     gap: '10px',
     minHeight: 0,
-  },
-  empty: {
-    textAlign: 'center',
-    color: '#b09ac0',
-    fontSize: '13px',
-    marginTop: 'auto',
-    marginBottom: 'auto',
-    padding: '20px',
-    fontStyle: 'italic',
   },
   bubble: {
     maxWidth: '88%',
@@ -169,7 +157,7 @@ const s = {
     background: '#faf8fc',
     flexShrink: 0,
     alignItems: 'flex-end',
-    borderRadius: '0 0 12px 12px',
+    borderRadius: '12px',
   },
   textarea: {
     flex: 1,
