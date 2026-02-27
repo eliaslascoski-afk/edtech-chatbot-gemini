@@ -9,14 +9,9 @@ export default function Home() {
 
   // Remove scroll externo do iframe
   useEffect(() => {
-    const els = [document.documentElement, document.body];
-    els.forEach((el) => {
-      el.style.height = '100%';
-      el.style.width = '100%';
-      el.style.margin = '0';
-      el.style.padding = '0';
-      el.style.overflow = 'hidden';
-    });
+    const style = document.createElement('style');
+    style.textContent = 'html,body{margin:0;padding:0;height:100%;overflow:hidden;background:transparent}';
+    document.head.appendChild(style);
   }, []);
 
   // Scroll interno
@@ -72,7 +67,6 @@ export default function Home() {
 
   return (
     <div style={s.wrapper}>
-      {/* Caixa de dialogo: so aparece quando ha mensagens */}
       {hasContent && (
         <div ref={messagesRef} style={s.messages}>
           {messages.map((msg, i) => (
@@ -95,7 +89,6 @@ export default function Home() {
           )}
         </div>
       )}
-      {/* Campo de input */}
       <div style={hasContent ? s.inputRowWithBorder : s.inputRowClean}>
         <textarea
           ref={textareaRef}
@@ -104,7 +97,7 @@ export default function Home() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Digite sua dúvida sobre o Guia EdTech..."
+          placeholder="Digite sua duvida sobre o Guia EdTech..."
           disabled={loading}
         />
         <button style={loading ? { ...s.button, opacity: 0.6 } : s.button} onClick={sendMessage} disabled={loading}>
@@ -117,10 +110,10 @@ export default function Home() {
 
 const s = {
   wrapper: {
+    position: 'fixed',
+    inset: 0,
     display: 'flex',
     flexDirection: 'column',
-    height: '100%',
-    width: '100%',
     margin: '0',
     padding: '0',
     boxSizing: 'border-box',
@@ -157,7 +150,6 @@ const s = {
     display: 'flex',
     gap: '8px',
     padding: '10px 12px',
-    borderTop: '1px solid #e8dff0',
     background: '#faf8fc',
     flexShrink: 0,
     alignItems: 'flex-end',
