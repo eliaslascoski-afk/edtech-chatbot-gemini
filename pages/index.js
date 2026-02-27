@@ -19,7 +19,7 @@ export default function Home() {
     });
   }, []);
 
-  // Scroll interno: rola para a ultima mensagem
+  // Scroll interno
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
@@ -68,10 +68,12 @@ export default function Home() {
     }
   }
 
+  const hasContent = messages.length > 0 || loading;
+
   return (
-    <div style={s.container}>
-      {/* Area de mensagens: so aparece quando ha conteudo, cresce ate o limite disponivel */}
-      {(messages.length > 0 || loading) && (
+    <div style={s.wrapper}>
+      {/* Caixa de dialogo: so aparece quando ha mensagens */}
+      {hasContent && (
         <div ref={messagesRef} style={s.messages}>
           {messages.map((msg, i) => (
             <div
@@ -93,8 +95,8 @@ export default function Home() {
           )}
         </div>
       )}
-      {/* Campo de input fixo na base */}
-      <div style={s.inputRow}>
+      {/* Campo de input */}
+      <div style={hasContent ? s.inputRowWithBorder : s.inputRowClean}>
         <textarea
           ref={textareaRef}
           style={s.textarea}
@@ -114,20 +116,18 @@ export default function Home() {
 }
 
 const s = {
-  container: {
-    position: 'relative',
+  wrapper: {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
     width: '100%',
     margin: '0',
     padding: '0',
-    fontFamily: "'PT Sans', sans-serif",
-    background: '#fff',
     boxSizing: 'border-box',
+    fontFamily: "'PT Sans', sans-serif",
+    background: 'transparent',
     overflow: 'hidden',
-    border: '1px solid #d8c8e0',
-    borderRadius: '12px',
+    justifyContent: 'flex-end',
   },
   messages: {
     flex: '1 1 auto',
@@ -138,6 +138,31 @@ const s = {
     flexDirection: 'column',
     gap: '10px',
     minHeight: 0,
+    background: '#fff',
+    border: '1px solid #d8c8e0',
+    borderBottom: 'none',
+    borderRadius: '12px 12px 0 0',
+  },
+  inputRowClean: {
+    display: 'flex',
+    gap: '8px',
+    padding: '10px 12px',
+    background: '#faf8fc',
+    flexShrink: 0,
+    alignItems: 'flex-end',
+    border: '1px solid #d8c8e0',
+    borderRadius: '12px',
+  },
+  inputRowWithBorder: {
+    display: 'flex',
+    gap: '8px',
+    padding: '10px 12px',
+    borderTop: '1px solid #e8dff0',
+    background: '#faf8fc',
+    flexShrink: 0,
+    alignItems: 'flex-end',
+    border: '1px solid #d8c8e0',
+    borderRadius: '0 0 12px 12px',
   },
   bubble: {
     maxWidth: '88%',
@@ -148,17 +173,6 @@ const s = {
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     fontFamily: "'PT Sans', sans-serif",
-  },
-  inputRow: {
-    display: 'flex',
-    gap: '8px',
-    padding: '10px 12px',
-    borderTop: '1px solid #e8dff0',
-    background: '#faf8fc',
-    flexShrink: 0,
-    alignItems: 'flex-end',
-    borderRadius: '0 0 12px 12px',
-    marginTop: 'auto',
   },
   textarea: {
     flex: 1,
