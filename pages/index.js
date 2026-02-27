@@ -7,21 +7,18 @@ export default function Home() {
   const textareaRef = useRef(null);
   const messagesRef = useRef(null);
 
-  // Remove scroll externo do iframe
   useEffect(() => {
     const style = document.createElement('style');
-    style.textContent = 'html,body{margin:0;padding:0;height:100%;overflow:hidden;background:transparent}';
+    style.textContent = 'html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent}';
     document.head.appendChild(style);
   }, []);
 
-  // Scroll interno
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  // Auto-resize da textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -63,12 +60,13 @@ export default function Home() {
     }
   }
 
-  const hasContent = messages.length > 0 || loading;
-
   return (
-    <div style={s.wrapper}>
-      {hasContent && (
+    <div style={s.outer}>
+      <div style={s.box}>
         <div ref={messagesRef} style={s.messages}>
+          {messages.length === 0 && !loading && (
+            <div style={s.placeholder}>Ola! Digite sua duvida sobre o Guia EdTech.</div>
+          )}
           {messages.map((msg, i) => (
             <div
               key={i}
@@ -88,39 +86,51 @@ export default function Home() {
             </div>
           )}
         </div>
-      )}
-      <div style={hasContent ? s.inputRowWithBorder : s.inputRowClean}>
-        <textarea
-          ref={textareaRef}
-          style={s.textarea}
-          rows={1}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Digite sua duvida sobre o Guia EdTech..."
-          disabled={loading}
-        />
-        <button style={loading ? { ...s.button, opacity: 0.6 } : s.button} onClick={sendMessage} disabled={loading}>
-          {loading ? '...' : 'Enviar'}
-        </button>
+        <div style={s.inputRow}>
+          <textarea
+            ref={textareaRef}
+            style={s.textarea}
+            rows={1}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKey}
+            placeholder="Digite sua duvida sobre o Guia EdTech..."
+            disabled={loading}
+          />
+          <button
+            style={loading ? { ...s.button, opacity: 0.6 } : s.button}
+            onClick={sendMessage}
+            disabled={loading}
+          >
+            {loading ? '...' : 'Enviar'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
 const s = {
-  wrapper: {
+  outer: {
     position: 'fixed',
     inset: 0,
     display: 'flex',
-    flexDirection: 'column',
-    margin: '0',
-    padding: '0',
-    boxSizing: 'border-box',
-    fontFamily: "'PT Sans', sans-serif",
+    alignItems: 'stretch',
+    justifyContent: 'stretch',
     background: 'transparent',
+    padding: '8px',
+    boxSizing: 'border-box',
+  },
+  box: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    border: '1px solid #d8c8e0',
+    borderRadius: '12px',
     overflow: 'hidden',
-    justifyContent: 'flex-end',
+    background: '#fff',
+    fontFamily: "'PT Sans', sans-serif",
+    minHeight: 0,
   },
   messages: {
     flex: '1 1 auto',
@@ -131,30 +141,22 @@ const s = {
     flexDirection: 'column',
     gap: '10px',
     minHeight: 0,
-    background: '#fff',
-    border: '1px solid #d8c8e0',
-    borderBottom: 'none',
-    borderRadius: '12px 12px 0 0',
   },
-  inputRowClean: {
+  placeholder: {
+    color: '#9e87aa',
+    fontSize: '14px',
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    padding: '4px 2px',
+  },
+  inputRow: {
     display: 'flex',
     gap: '8px',
     padding: '10px 12px',
+    borderTop: '1px solid #e8dff0',
     background: '#faf8fc',
     flexShrink: 0,
     alignItems: 'flex-end',
-    border: '1px solid #d8c8e0',
-    borderRadius: '12px',
-  },
-  inputRowWithBorder: {
-    display: 'flex',
-    gap: '8px',
-    padding: '10px 12px',
-    background: '#faf8fc',
-    flexShrink: 0,
-    alignItems: 'flex-end',
-    border: '1px solid #d8c8e0',
-    borderRadius: '0 0 12px 12px',
   },
   bubble: {
     maxWidth: '88%',
