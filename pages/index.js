@@ -220,7 +220,7 @@ const s = {
     borderRadius: '14px',
     lineHeight: 1.5,
     fontSize: '13px',
-    whiteSpace: 'pre-wrap',
+    whiteSpace: 'normal',
     wordBreak: 'break-word',
     fontFamily: "'PT Sans', sans-serif",
   },
