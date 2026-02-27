@@ -14,12 +14,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (messagesRef.current) {
-      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-    }
-  }, [messages, loading]);
-
-  useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
@@ -115,14 +109,15 @@ const s = {
     position: 'fixed',
     inset: 0,
     display: 'flex',
-    alignItems: 'stretch',
-    justifyContent: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
     background: 'transparent',
     padding: '8px',
     boxSizing: 'border-box',
   },
   box: {
-    flex: 1,
+    width: '420px',
+    height: '420px',
     display: 'flex',
     flexDirection: 'column',
     border: '1px solid #d8c8e0',
@@ -130,7 +125,6 @@ const s = {
     overflow: 'hidden',
     background: '#fff',
     fontFamily: "'PT Sans', sans-serif",
-    minHeight: 0,
   },
   messages: {
     flex: '1 1 auto',
@@ -163,7 +157,7 @@ const s = {
     padding: '9px 13px',
     borderRadius: '14px',
     lineHeight: 1.5,
-    fontSize: '14px',
+    fontSize: '13px',
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     fontFamily: "'PT Sans', sans-serif",
