@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const SITE_PAGES = [
   'https://sites.google.com/view/conteudosedtech/guia',
@@ -58,7 +58,7 @@ REVISAO (REV):
 
 NORMATIZACAO (NOR) - ABNT:
 - Citacoes diretas curtas (ate 3 linhas): entre aspas duplas no corpo do texto
-- Citacoes diretas longas (4+ linhas): recuo de 4 cm, fonte menor, sem aspas
+- Citacoes diretas longas (4+ linhas): recuo de 4 cm, fonte menor (10pt), sem aspas, espacamento simples
 - Referencias: SOBRENOME, Nome. Titulo em negrito. Edicao. Local: Editora, Ano.
 - NBR 10520:2023 - Citacoes em documentos
 - NBR 14724:2024 - Trabalhos academicos (apresentacao)
@@ -83,13 +83,13 @@ LINGUAGEM INCLUSIVA (LIN):
 - Preferir: "pessoa com deficiencia" a "deficiente"
 - Flexao de genero dupla (o/a) ou formas neutras aceitas pelo guia
 
-DOCUMENTACO (DOC):
+DOCUMENTACAO (DOC):
 - Margem: 3cm (superior e esquerda), 2cm (inferior e direita)
 - Fonte: Times New Roman 12 ou Arial 11
 - Espacamento: 1,5 entrelinhas no corpo; simples em citacoes longas e referencias
 `;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
@@ -106,7 +106,7 @@ export default async function handler(req, res) {
       systemInstruction: `Voce e o Assistente EdTech do Guia de Estilo da Vitru Educacao.
 Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
 Use as fontes de conhecimento abaixo para responder com precisao.
-Se a pergunta for sobre ABNT, cite a norma especifica.
+Se a pergunta for sobre ABNT, cite a norma especifica (NBR 10520:2023, NBR 14724:2024 ou NBR 6023:2025).
 Se nao souber, oriente o usuario a consultar o guia ou contactar Elias Lascoski.
 Seja conciso: ate 300 palavras por resposta.
 Nunca invente regras ou normas.
@@ -128,7 +128,7 @@ ${siteContext}`,
 
     return res.status(200).json({ reply });
   } catch (error) {
-    console.error('Erro Gemini:', error);
+    console.error('Erro Gemini:', error.message || error);
     return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
   }
-}
+};
