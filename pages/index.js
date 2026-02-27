@@ -88,7 +88,7 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Digite sua dúvida sobre o Guia EdTech..."
+            placeholder="Digite sua dúvida sobre o guia..."
             disabled={loading}
           />
           <button
@@ -116,8 +116,8 @@ const s = {
     boxSizing: 'border-box',
   },
   box: {
-    width: '420px',
-    height: '420px',
+    width: '420px',     marginBottom: '14px',
+    height: '380px',
     display: 'flex',
     flexDirection: 'column',
     border: '1px solid #d8c8e0',
