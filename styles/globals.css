@@ -1,3 +1,26 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: #f1f5f9; padding: 0; }
-html, body { height: auto; }
+@import url('https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'PT Sans', sans-serif;
+  background: #fff;
+}
+
+#__next {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
