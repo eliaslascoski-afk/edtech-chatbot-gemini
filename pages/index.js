@@ -106,7 +106,7 @@ export default function Home() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKey}
-          placeholder="Digite sua duvida sobre o Guia EdTech..."
+          placeholder="Digite sua dúvida sobre o Guia EdTech..."
           disabled={loading}
         />
         <button style={loading ? { ...s.button, opacity: 0.6 } : s.button} onClick={sendMessage} disabled={loading}>
