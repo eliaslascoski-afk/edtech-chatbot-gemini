@@ -1,5 +1,5 @@
 const DOC_ID = '1TLANzH4fjZ7RZN7i5cj_G4yiwWRCxL5l';
-const MODEL = 'gemini-2.5-flash-preview-04-17';
+const MODEL = 'gemini-2.0-flash-001';
 
 let cachedDoc = null;
 let cacheTime = 0;
