@@ -1,5 +1,60 @@
 import { useState, useRef, useEffect } from 'react';
 
+function renderMarkdown(text) {
+  const lines = text.split('\n');
+  const elements = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // numbered list
+    const numMatch = line.match(/^(\d+)\.\s+(.*)/);
+    if (numMatch) {
+      const items = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^\d+\.\s+(.*)/);
+        if (!m) break;
+        items.push(renderInline(m[1]));
+        i++;
+      }
+      elements.push(<ol key={i} style={{paddingLeft:'18px',margin:'6px 0'}}>{items.map((it,j)=><li key={j} style={{marginBottom:'4px'}}>{it}</li>)}</ol>);
+      continue;
+    }
+    // bullet list
+    const bulMatch = line.match(/^[-*]\s+(.*)/);
+    if (bulMatch) {
+      const items = [];
+      while (i < lines.length) {
+        const m = lines[i].match(/^[-*]\s+(.*)/);
+        if (!m) break;
+        items.push(renderInline(m[1]));
+        i++;
+      }
+      elements.push(<ul key={i} style={{paddingLeft:'18px',margin:'6px 0'}}>{items.map((it,j)=><li key={j} style={{marginBottom:'4px'}}>{it}</li>)}</ul>);
+      continue;
+    }
+    // empty line
+    if (line.trim() === '') {
+      elements.push(<br key={i} />);
+      i++;
+      continue;
+    }
+    // normal paragraph
+    elements.push(<span key={i} style={{display:'block',marginBottom:'2px'}}>{renderInline(line)}</span>);
+    i++;
+  }
+  return elements;
+}
+
+function renderInline(text) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -12,6 +67,12 @@ export default function Home() {
     style.textContent = 'html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent}';
     document.head.appendChild(style);
   }, []);
+
+  useEffect(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -59,7 +120,7 @@ export default function Home() {
       <div style={s.box}>
         <div ref={messagesRef} style={s.messages}>
           {messages.length === 0 && !loading && (
-            <div style={s.placeholder}>Suas respostas aparecerão aqui!</div>
+            <div style={s.placeholder}>Suas respostas aparecerao aqui!</div>
           )}
           {messages.map((msg, i) => (
             <div
@@ -71,7 +132,7 @@ export default function Home() {
                 color: msg.role === 'user' ? '#fff' : '#1e293b',
               }}
             >
-              {msg.text}
+              {msg.role === 'assistant' ? renderMarkdown(msg.text) : msg.text}
             </div>
           ))}
           {loading && (
@@ -88,7 +149,7 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Digite sua dúvida sobre o guia..."
+            placeholder="Digite sua duvida sobre o guia..."
             disabled={loading}
           />
           <button
@@ -116,8 +177,9 @@ const s = {
     boxSizing: 'border-box',
   },
   box: {
-    width: '420px',     marginBottom: '14px',
+    width: '420px',
     height: '380px',
+    marginBottom: '14px',
     display: 'flex',
     flexDirection: 'column',
     border: '1px solid #d8c8e0',
