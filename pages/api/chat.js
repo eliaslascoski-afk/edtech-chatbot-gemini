@@ -28,12 +28,13 @@ async function fetchGuiaDoc() {
 
 async function logToSheet(pergunta, resposta) {
   try {
-    await fetch(LOG_URL, {
+    const logRes = await fetch(LOG_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pergunta, resposta }),
       redirect: 'follow',
     });
+    console.log('Log status:', logRes.status);
   } catch (e) {
     console.error('Erro ao registrar na planilha:', e.message);
   }
@@ -86,8 +87,8 @@ ${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: document
     }
     const data = await apiRes.json();
     const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
-    // Registrar na planilha (sem await para nao atrasar a resposta)
-    logToSheet(message, reply);
+    // Aguardar o registro na planilha antes de retornar
+    await logToSheet(message, reply);
     return res.status(200).json({ reply });
   } catch (error) {
     console.error('Erro handler:', error.message || error);
