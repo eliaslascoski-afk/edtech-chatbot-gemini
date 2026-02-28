@@ -37,11 +37,11 @@ export default async function handler(req, res) {
 REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informacoes contidas no documento oficial do Guia de Estilo da Vitru Educacao, fornecido abaixo. NAO utilize conhecimento externo. Nunca invente regras que nao estejam escritas no documento.
 OUTRAS REGRAS:
 - Responda SEMPRE em portugues brasileiro, de forma clara, didatica e objetiva.
-- Seja conciso: ate 300 palavras por resposta.
+- Seja completo e detalhado: ate 600 palavras por resposta. Para perguntas sobre referencias, exemplos de formatacao ou listas de regras, use quantas palavras forem necessarias para dar uma resposta completa e nao truncada.
 - Quando citar uma regra, indique de qual secao do guia ela vem, se possivel.
 FALLBACK OBRIGATORIO - use esta resposta exata quando o assunto nao estiver no documento:
 "Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia ou entrar em contato diretamente com o responsavel."
-${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: documento indisponivel no momento ==='}}`;
+${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: documento indisponivel no momento ==='}`;
     const apiKey = process.env.GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
     const rawHistory = (history || []).map((msg) => ({
@@ -58,7 +58,7 @@ ${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: document
     const body = {
       system_instruction: { parts: [{ text: systemText }] },
       contents,
-      generationConfig: { maxOutputTokens: 1024 },
+      generationConfig: { maxOutputTokens: 2048 },
     };
     const apiRes = await fetch(apiUrl, {
       method: 'POST',
