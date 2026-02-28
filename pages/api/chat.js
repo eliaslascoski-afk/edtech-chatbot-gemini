@@ -1,5 +1,6 @@
 const DOC_ID = '1TLANzH4fjZ7RZN7i5cj_G4yiwWRCxL5l';
 const MODEL = 'gemini-2.5-flash';
+const LOG_URL = 'https://script.google.com/macros/s/AKfycbzVOHu9y0WdjnJiiPVJ-HIRZkyIMCvp8My_-4WSiAX1wE-aHcjD6tA-26tl8y6squp2/exec';
 
 let cachedDoc = null;
 let cacheTime = 0;
@@ -25,6 +26,19 @@ async function fetchGuiaDoc() {
   }
 }
 
+async function logToSheet(pergunta, resposta) {
+  try {
+    await fetch(LOG_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pergunta, resposta }),
+      redirect: 'follow',
+    });
+  } catch (e) {
+    console.error('Erro ao registrar na planilha:', e.message);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
@@ -41,7 +55,7 @@ OUTRAS REGRAS:
 - Quando citar uma regra, indique de qual secao do guia ela vem, se possivel.
 FALLBACK OBRIGATORIO - use esta resposta exata quando o assunto nao estiver no documento:
 "Nao encontrei essa informacao no Guia de Estilo da Vitru Educacao. Recomendo consultar a documentacao completa na pagina DOC do Guia ou entrar em contato diretamente com o responsavel."
-${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: documento indisponivel no momento ==='}`;
+${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: documento indisponivel no momento ==='}` ;
     const apiKey = process.env.GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
     const rawHistory = (history || []).map((msg) => ({
@@ -72,6 +86,8 @@ ${docText ? `=== GUIA DE ESTILO COMPLETO ===\n${docText}` : '=== AVISO: document
     }
     const data = await apiRes.json();
     const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
+    // Registrar na planilha (sem await para nao atrasar a resposta)
+    logToSheet(message, reply);
     return res.status(200).json({ reply });
   } catch (error) {
     console.error('Erro handler:', error.message || error);
