@@ -120,7 +120,7 @@ export default function Home() {
       <div style={s.box}>
         <div ref={messagesRef} style={s.messages}>
           {messages.length === 0 && !loading && (
-            <div style={s.placeholder}>Suas respostas aparecerao aqui!</div>
+            <div style={s.placeholder}>Suas respostas aparecerão aqui!</div>
           )}
           {messages.map((msg, i) => (
             <div
@@ -149,7 +149,7 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Digite sua duvida sobre o guia..."
+            placeholder="Digite sua dúvida sobre o guia..."
             disabled={loading}
           />
           <button
