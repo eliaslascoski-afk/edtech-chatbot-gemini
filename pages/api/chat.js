@@ -60,7 +60,7 @@ OUTRAS REGRAS:
 - Quando o usuário PEDIR explicitamente a fonte (por exemplo: "qual é a página?", "de onde tirou isso?", "citar fonte completa"), indique:
   * A PÁGINA (Título 1) de onde a informação foi retirada
   * A SEÇÃO (Título 2) específica dentro dessa página
-  Formato sugerido: "(Guia de Estilo > [Página/Título 1] > [Seção/Título 2])"
+  Formato sugerido: "([Página/Título 1] > [Seção/Título 2])"
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo da Vitru Educação. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===
