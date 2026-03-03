@@ -57,10 +57,9 @@ REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informações contidas no d
 OUTRAS REGRAS:
 - Responda SEMPRE em português brasileiro, de forma clara, didática e objetiva.
 - Seja completo e detalhado: até 600 palavras por resposta. Para perguntas sobre referências, exemplos de formatação ou listas de regras, use quantas palavras forem necessárias para dar uma resposta completa e não truncada.
-- Quando o usuário PEDIR explicitamente a fonte (por exemplo: "qual é a página?", "de onde tirou isso?", "citar fonte completa"), indique:
+- Quando o usuário PEDIR EXPLICITAMENTE a fonte (por exemplo: "qual é a página?", "de onde tirou isso?", "citar fonte completa"), indique:
   * A PÁGINA (Título 1) de onde a informação foi retirada
   * A SEÇÃO (Título 2) específica dentro dessa página
-  Formato sugerido: "([Página/Título 1] > [Seção/Título 2])"
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo da Vitru Educação. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===
