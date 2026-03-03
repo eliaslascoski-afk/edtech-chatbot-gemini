@@ -63,7 +63,7 @@ CITAÇÃO DE FONTE (APENAS QUANDO O USUÁRIO PEDIR):
 - Somente quando o usuário PEDIR EXPLICITAMENTE a fonte (por exemplo: "qual é a página?", "de onde tirou isso?", "citar fonte completa"), responda indicando:
   * A PÁGINA (Título 1) de onde a informação foi retirada
   * A SEÇÃO (Título 2) específica dentro dessa página
-- Se o usuário não pedir a fonte, responda normalmente SEM mencionar página, seção ou qualquer formato de citação.
+- Se o usuário não pedir a fonte, responda normalmente SEM mencionar página, seção ou qualquer formato de citação. Reforçando: NÃO cite fonte ao final das respostas (cite apenas se o usuário pedi-las).
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo da Vitru Educação. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===
