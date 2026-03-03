@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-
 function renderMarkdown(text) {
   const lines = text.split('\n');
   const elements = [];
@@ -44,43 +43,52 @@ function renderMarkdown(text) {
   }
   return elements;
 }
-
 function renderInline(text) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/);
+  // Split by URLs, bold markers
+  const parts = text.split(/(https?:\/\/[^\s]+|\*\*[^*]+\*\*)/);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
     }
+    if (/^https?:\/\//.test(part)) {
+      const clean = part.replace(/[.,;:!?]$/, '');
+      return (
+        <a
+          key={i}
+          href={clean}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#804090', textDecoration: 'underline', wordBreak: 'break-all' }}
+        >
+          {clean}
+        </a>
+      );
+    }
     return part;
   });
 }
-
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const textareaRef = useRef(null);
   const messagesRef = useRef(null);
-
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = 'html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent}';
     document.head.appendChild(style);
   }, []);
-
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages, loading]);
-
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, [input]);
-
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -107,20 +115,18 @@ export default function Home() {
       setLoading(false);
     }
   }
-
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   }
-
   return (
     <div style={s.outer}>
       <div style={s.box}>
         <div ref={messagesRef} style={s.messages}>
           {messages.length === 0 && !loading && (
-            <div style={s.placeholder}>Suas respostas aparecer&atilde;o aqui!</div>
+            <div style={s.placeholder}>Suas respostas aparecerão aqui!</div>
           )}
           {messages.map((msg, i) => (
             <div
@@ -149,7 +155,7 @@ export default function Home() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            placeholder="Digite sua d&uacute;vida sobre o guia..."
+            placeholder="Digite sua dúvida sobre o guia..."
             disabled={loading}
           />
           <button
@@ -164,7 +170,6 @@ export default function Home() {
     </div>
   );
 }
-
 const s = {
   outer: {
     position: 'fixed',
