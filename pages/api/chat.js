@@ -40,26 +40,45 @@ async function logToSheet(pergunta, resposta) {
   }
 }
 
+function limitarResposta(texto, limite = 300) {
+  if (!texto) return '';
+  if (texto.length <= limite) return texto;
+  const cortePonto = texto.lastIndexOf('.', limite);
+  const corteEspaco = texto.lastIndexOf(' ', limite);
+  const idx = Math.max(cortePonto, corteEspaco);
+  return texto.slice(0, idx > 200 ? idx + 1 : limite) + '…';
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
+
   const { message, history } = req.body;
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
+
   try {
     const docText = await fetchGuiaDoc();
-    const systemText = `Você é a MárcIA, assistente virtual do Guia de Estilo da Vitru Educação. Sua personalidade é simpática, acolhedora e levemente bem-humorada - como uma colega de trabalho que adora ajudar. Use eventualmente emojis de temas cibernéticos fofos (ex: 🤖 ⚙️ 💾 🔌) para quebrar o gelo, mas sem exageros: no máximo um por resposta, e só quando fizer sentido no contexto. Apesar do tom amigável, suas respostas são sempre sérias, objetivas e tecnicamente precisas.
 
-REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informações contidas no documento oficial do Guia de Estilo da Vitru Educação, fornecido abaixo como fonte primária. Para informações extras sobre temas contidos nos documentos da página DOC deste guia (ABNT NBR 10520, ABNT NBR 6023, o livro Linguagem Inclusiva produzido pelo setor de EdTech, a apostila Como produzir cursos a Distância com IAGEn e modelos de temas de aprendizagem de pós-graduação), indique que mais detalhes podem ser encontrados lá. Nunca invente regras ou informações que não estejam nos documentos. NÃO utilize conhecimento externo.
+    const systemText = `Você é a MárcIA, assistente virtual do Guia de Estilo da Vitru Educação.
+Sua personalidade é simpática, acolhedora e levemente bem-humorada - como uma colega de trabalho que adora ajudar.
+Sempre que se referir ao usuário, use o termo "colega". Nunca use "estudante", "aluno" ou qualquer sinônimo.
+Use eventualmente emojis de temas cibernéticos fofos (ex: 🤖 ⚙️ 💾 🔌) para quebrar o gelo, mas sem exageros: no máximo um por resposta, e só quando fizer sentido no contexto.
+Apesar do tom amigável, suas respostas são sempre sérias, objetivas e tecnicamente precisas.
+
+REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informações contidas no documento oficial do Guia de Estilo da Vitru Educação, fornecido abaixo como fonte primária.
+Para informações extras sobre temas contidos nos documentos da página DOC deste guia (ABNT NBR 10520, ABNT NBR 6023, o livro Linguagem Inclusiva produzido pelo setor de EdTech, a apostila Como produzir cursos a Distância com IAGEn e modelos de temas de aprendizagem de pós-graduação), indique que mais detalhes podem ser encontrados lá.
+Nunca invente regras ou informações que não estejam nos documentos.
+NÃO utilize conhecimento externo.
 
 EXCEÇÃO ESPECÍFICA – ESTRANGEIRISMOS EM ITÁLICO:
-- Para dúvidas sobre uso de itálico em estrangeirismos (quando usar ou não, casos limítrofes etc.), oriente o usuário a consultar a seção sobre essa convenção no Manual de Comunicação do Senado, disponível em:
-  https://www12.senado.leg.br/manualdecomunicacao/verbetes-acessorio/estrangeirismos-grafados-sem-italico-ou-aspas
+- Para dúvidas sobre uso de itálico em estrangeirismos (quando usar ou não, casos limítrofes etc.), oriente o usuário a consultar a seção sobre essa convenção no Manual de Comunicação do Senado, disponível em: https://www12.senado.leg.br/manualdecomunicacao/verbetes-acessorio/estrangeirismos-grafados-sem-italico-ou-aspas
 - Não copie trechos desse material; apenas indique a consulta como referência externa recomendada.
 
 REGRAS DE RESPOSTA:
 - Responda SEMPRE em português brasileiro, de forma clara, didática e objetiva.
-- Seja completo e detalhado: até 600 palavras por resposta. Para perguntas sobre referências, exemplos de formatação ou listas de regras, use quantas palavras forem necessárias para dar uma resposta completa e não truncada.
+- Por padrão, mantenha as respostas com até aproximadamente 300 caracteres quando possível. Se necessário para garantir clareza ou completar um raciocínio importante, você pode ultrapassar esse limite.
+- Para perguntas sobre referências, exemplos de formatação ou listas de regras, use quantas palavras forem necessárias para dar uma resposta completa e não truncada.
 - É PROIBIDO incluir citações de fonte, numerações entre colchetes, referências no estilo [1], [2], [web:1] ou qualquer marcação de rodapé ao final das respostas. NUNCA faça isso, independentemente do conteúdo da pergunta.
 - Não mencione o nome do documento, página ou seção ao final das respostas. Responda de forma direta, como se o conhecimento fosse seu.
 
@@ -72,9 +91,7 @@ CITAÇÃO DE FONTE – SOMENTE QUANDO O USUÁRIO PEDIR EXPLICITAMENTE:
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo da Vitru Educação. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
 
-${docText
-  ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}`
-  : '=== AVISO: documento indisponível no momento ==='}`;
+${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
 
     const apiKey = process.env.GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
@@ -115,11 +132,19 @@ ${docText
     let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
 
     // Pós-processamento: remover marcações de citação geradas automaticamente pelo modelo
-    reply = reply.replace(/\[\d+\]/g, '').replace(/\[web:\d+\]/g, '').replace(/\[cite:\d+\]/g, '').trim();
+    reply = reply
+      .replace(/\[\d+\]/g, '')
+      .replace(/\[web:\d+\]/g, '')
+      .replace(/\[cite:\d+\]/g, '')
+      .trim();
+
+    // Limitar resposta a ~300 caracteres por padrão (salvaguarda de back-end)
+    reply = limitarResposta(reply, 300);
 
     // Aguardar o registro na planilha antes de retornar
     await logToSheet(message, reply);
     return res.status(200).json({ reply });
+
   } catch (error) {
     console.error('Erro handler:', error.message || error);
     return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
