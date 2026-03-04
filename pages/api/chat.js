@@ -79,7 +79,7 @@ CITAÇÃO DE FONTE – SOMENTE QUANDO O USUÁRIO PEDIR EXPLICITAMENTE:
 - Em qualquer outra situação, NÃO mencione fonte, página, seção ou referência alguma.
 
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
-"Não encontrei essa informação no Guia de Estilo da Vitru Educação. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
+"Não encontrei essa informação no Guia de Estilo EdTech da Vitru 🥲. Recomendo consultar a documentação completa na página DOC do Guia ou entrar em contato diretamente com o responsável."
 
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
 
