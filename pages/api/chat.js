@@ -40,15 +40,6 @@ async function logToSheet(pergunta, resposta) {
   }
 }
 
-function limitarResposta(texto, limite = 300) {
-  if (!texto) return '';
-  if (texto.length <= limite) return texto;
-  const cortePonto = texto.lastIndexOf('.', limite);
-  const corteEspaco = texto.lastIndexOf(' ', limite);
-  const idx = Math.max(cortePonto, corteEspaco);
-  return texto.slice(0, idx > 200 ? idx + 1 : limite) + '…';
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
@@ -77,8 +68,7 @@ EXCEÇÃO ESPECÍFICA – ESTRANGEIRISMOS EM ITÁLICO:
 
 REGRAS DE RESPOSTA:
 - Responda SEMPRE em português brasileiro, de forma clara, didática e objetiva.
-- Por padrão, mantenha as respostas com até aproximadamente 300 caracteres quando possível. Se necessário para garantir clareza ou completar um raciocínio importante, você pode ultrapassar esse limite.
-- Para perguntas sobre referências, exemplos de formatação ou listas de regras, use quantas palavras forem necessárias para dar uma resposta completa e não truncada.
+- TAMANHO DAS RESPOSTAS: planeje e redija cada resposta para que ela seja completa e encerrada naturalmente dentro de aproximadamente 300 caracteres. Não escreva respostas longas que seriam cortadas — escreva respostas já pensadas para esse tamanho. Se a pergunta exigir mais detalhe (ex.: listas de regras, exemplos de formatação, referências ABNT), você pode e deve ultrapassar esse limite para garantir clareza e completude.
 - É PROIBIDO incluir citações de fonte, numerações entre colchetes, referências no estilo [1], [2], [web:1] ou qualquer marcação de rodapé ao final das respostas. NUNCA faça isso, independentemente do conteúdo da pergunta.
 - Não mencione o nome do documento, página ou seção ao final das respostas. Responda de forma direta, como se o conhecimento fosse seu.
 
@@ -137,9 +127,6 @@ ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}` : '=
       .replace(/\[web:\d+\]/g, '')
       .replace(/\[cite:\d+\]/g, '')
       .trim();
-
-    // Limitar resposta a ~300 caracteres por padrão (salvaguarda de back-end)
-    reply = limitarResposta(reply, 300);
 
     // Aguardar o registro na planilha antes de retornar
     await logToSheet(message, reply);
