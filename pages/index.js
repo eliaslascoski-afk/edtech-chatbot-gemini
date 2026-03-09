@@ -44,15 +44,11 @@ function renderMarkdown(text) {
   return elements;
 }
 function renderInline(text) {
-  // Split by URLs, bold (**texto**) e italic (*texto*)
-  // A ordem importa: negrito (**) antes do itálico (*) para evitar conflito
-  const parts = text.split(/(https?:\/\/[^\s]+|\*\*[^*]+\*\*|\*[^*]+\*)/);
+  // Split by URLs, bold markers
+  const parts = text.split(/(https?:\/\/[^\s]+|\*\*[^*]+\*\*)/);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
       return <strong key={i}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-      return <em key={i}>{part.slice(1, -1)}</em>;
     }
     if (/^https?:\/\//.test(part)) {
       const clean = part.replace(/[.,;:!?]$/, '');
