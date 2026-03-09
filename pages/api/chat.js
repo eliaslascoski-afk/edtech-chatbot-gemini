@@ -6,6 +6,18 @@ let cachedDoc = null;
 let cacheTime = 0;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hora
 
+// Decodifica entidades HTML para caracteres UTF-8
+function decodeHtmlEntities(str) {
+  if (!str) return str;
+  return str
+    .replace(/&aacute;/g, 'á').replace(/&Eacute;/g, 'É').replace(/&iacute;/g, 'í').replace(/&oacute;/g, 'ó').replace(/&uacute;/g, 'ú')
+    .replace(/&atilde;/g, 'ã').replace(/&otilde;/g, 'õ').replace(/&Atilde;/g, 'Ã').replace(/&Otilde;/g, 'Õ')
+    .replace(/&ccedil;/g, 'ç').replace(/&Ccedil;/g, 'Ç')
+    .replace(/&eacute;/g, 'é').replace(/&Aacute;/g, 'Á').replace(/&Iacute;/g, 'Í').replace(/&Oacute;/g, 'Ó').replace(/&Uacute;/g, 'Ú')
+    .replace(/&nbsp;/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+}
+
 // Converte HTML do Google Docs em texto puro preservando itálicos como *texto*
 function htmlToMarkdown(html) {
   return html
@@ -16,23 +28,21 @@ function htmlToMarkdown(html) {
     })
     // Remove todas as outras tags HTML
     .replace(/<[^>]+>/g, '')
-    // Decodifica entidades HTML comuns
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ')
+    // Decodifica entidades HTML
+    .replace(/&[a-z0-9#]+;/gi, (match) => decodeHtmlEntities(match))
     // Remove linhas em branco excessivas
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/
+{3,}/g, '
+
+')
     .trim();
 }
 
 async function fetchGuiaDoc() {
   const now = Date.now();
   if (cachedDoc && now - cacheTime < CACHE_TTL) return cachedDoc;
+
   try {
-    // Busca HTML para preservar formatação de itálico
     const url = `https://docs.google.com/document/d/${DOC_ID}/export?format=html`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'EdTechBot/1.0' },
@@ -40,7 +50,6 @@ async function fetchGuiaDoc() {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
-    // Converte HTML em Markdown simples preservando itálicos
     const text = htmlToMarkdown(html);
     cachedDoc = text;
     cacheTime = now;
@@ -69,8 +78,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
+
   const { message, history } = req.body;
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
+
   try {
     const docText = await fetchGuiaDoc();
     const systemText = `Você é a MárcIA, assistente virtual do Guia de Estilo da Vitru Educação.
@@ -102,44 +113,54 @@ FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em
 NOTA SOBRE ITÁLICO NA BASE DE CONHECIMENTO:
 - O documento da base de conhecimento usa a marcação *texto* (asteriscos) para indicar palavras ou trechos que estavam em itálico no documento original.
 - Ao citar exemplos ou regras que envolvam termos em itálico, reproduza essa marcação corretamente (ex.: escreva *software*, *layout*, *e-mail* com asteriscos).
-${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
+${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===
+${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
+
     const apiKey = process.env.GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+
     const rawHistory = (history || []).map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.text }],
     }));
+
     while (rawHistory.length > 0 && rawHistory[0].role === 'model') {
       rawHistory.shift();
     }
+
     const contents = [
       ...rawHistory,
       { role: 'user', parts: [{ text: message }] },
     ];
+
     const body = {
       system_instruction: { parts: [{ text: systemText }] },
       contents,
       generationConfig: { maxOutputTokens: 2048 },
     };
+
     const apiRes = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+
     if (!apiRes.ok) {
       const errText = await apiRes.text();
       console.error('Erro API Gemini:', apiRes.status, errText);
       return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
     }
+
     const data = await apiRes.json();
     let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
-    // Pós-processamento: remover marcações de citação geradas automaticamente pelo modelo
-    reply = reply
+
+    // Pós-processamento: decodifica entidades HTML e limpa marcações
+    reply = decodeHtmlEntities(reply)
       .replace(/\[\d+\]/g, '')
       .replace(/\[web:\d+\]/g, '')
       .replace(/\[cite:\d+\]/g, '')
       .trim();
-    // Aguardar o registro na planilha antes de retornar
+
     await logToSheet(message, reply);
     return res.status(200).json({ reply });
   } catch (error) {
