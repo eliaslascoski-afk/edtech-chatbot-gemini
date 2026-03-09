@@ -18,9 +18,14 @@ function decodeHtmlEntities(str) {
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>');
 }
 
-// Converte HTML do Google Docs em texto puro preservando itálicos como *texto*
+// Converte HTML do Google Docs em texto puro preservando itálicos e negritos
 function htmlToMarkdown(html) {
   return html
+    // Preserva negrito: <strong> e <b> viram **texto**
+    .replace(/<(strong|b)(\s[^>]*)?>([\s\S]*?)<\/(strong|b)>/gi, (match, tag1, attrs, content, tag2) => {
+      const inner = htmlToMarkdown(content);
+      return `**${inner}**`;
+    })
     // Preserva itálico: <em> e <i> viram *texto*
     .replace(/<(em|i)(\s[^>]*)?>([\s\S]*?)<\/(em|i)>/gi, (match, tag1, attrs, content, tag2) => {
       const inner = htmlToMarkdown(content);
@@ -110,9 +115,9 @@ CITAÇÃO DE FONTE – SOMENTE QUANDO O USUÁRIO PEDIR EXPLICITAMENTE:
 - Em qualquer outra situação, NÃO mencione fonte, página, seção ou referência alguma.
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo EdTech da Vitru 😶‍🌫️. Recomendo consultar a documentação completa na página DOC deste guia ou entrar em contato diretamente com o responsável: https://www.google.com/url?q=https%3A%2F%2Fteams.microsoft.com%2Fl%2Fchat%2F0%2F0%3Fusers%3Delias.lascoski%40vitru.com.br&sa=D&sntz=1&usg=AOvVaw17di1PoX2cmja8SQaLz5ze Você também pode solicitar aqui a inclusão de tópicos/assuntos: https://sites.google.com/view/conteudosedtech/doc/sugest%C3%B5es"
-NOTA SOBRE ITÁLICO NA BASE DE CONHECIMENTO:
-- O documento da base de conhecimento usa a marcação *texto* (asteriscos) para indicar palavras ou trechos que estavam em itálico no documento original.
-- Ao citar exemplos ou regras que envolvam termos em itálico, reproduza essa marcação corretamente (ex.: escreva *software*, *layout*, *e-mail* com asteriscos).
+NOTA SOBRE FORMATAÇÃO NA BASE DE CONHECIMENTO:
+- O documento da base de conhecimento usa a marcação *texto* (um asterisco) para itálico e **texto** (dois asteriscos) para negrito.
+- Ao citar exemplos ou regras que envolvam termos com essas formatações, reproduza-as fielmente conforme a fonte primária.
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===
 ${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
 
