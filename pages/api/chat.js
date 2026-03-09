@@ -6,17 +6,42 @@ let cachedDoc = null;
 let cacheTime = 0;
 const CACHE_TTL = 60 * 60 * 1000; // 1 hora
 
+// Converte HTML do Google Docs em texto puro preservando itálicos como *texto*
+function htmlToMarkdown(html) {
+  return html
+    // Preserva itálico: <em> e <i> viram *texto*
+    .replace(/<(em|i)(\s[^>]*)?>([\s\S]*?)<\/(em|i)>/gi, (match, tag1, attrs, content, tag2) => {
+      const inner = htmlToMarkdown(content);
+      return `*${inner}*`;
+    })
+    // Remove todas as outras tags HTML
+    .replace(/<[^>]+>/g, '')
+    // Decodifica entidades HTML comuns
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    // Remove linhas em branco excessivas
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 async function fetchGuiaDoc() {
   const now = Date.now();
   if (cachedDoc && now - cacheTime < CACHE_TTL) return cachedDoc;
   try {
-    const url = `https://docs.google.com/document/d/${DOC_ID}/export?format=txt`;
+    // Busca HTML para preservar formatação de itálico
+    const url = `https://docs.google.com/document/d/${DOC_ID}/export?format=html`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'EdTechBot/1.0' },
       redirect: 'follow',
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
+    const html = await res.text();
+    // Converte HTML em Markdown simples preservando itálicos
+    const text = htmlToMarkdown(html);
     cachedDoc = text;
     cacheTime = now;
     return cachedDoc;
@@ -44,27 +69,21 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Metodo nao permitido' });
   }
-
   const { message, history } = req.body;
   if (!message) return res.status(400).json({ error: 'Mensagem ausente' });
-
   try {
     const docText = await fetchGuiaDoc();
-
     const systemText = `Você é a MárcIA, assistente virtual do Guia de Estilo da Vitru Educação.
 Sua personalidade é simpática, acolhedora e levemente bem-humorada - como uma colega de trabalho que adora ajudar.
 Algumas vezes, quando se referir ao usuário, use o termo "colega". Faça isso apenas em uma a cada seis respostas, aproximadamente. Não chame o usuário de colega em todas as interações. Nunca use "estudante", "aluno" ou qualquer sinônimo.
-
 REGRA ABSOLUTA: Responda EXCLUSIVAMENTE com base nas informações contidas no documento oficial do Guia de Estilo da Vitru Educação, fornecido abaixo como fonte primária.
 Para informações extras sobre temas contidos nos documentos da página DOC deste guia (ABNT NBR 10520, ABNT NBR 6023, o livro Linguagem Inclusiva produzido pelo setor de EdTech, a apostila Como produzir cursos a Distância com IAGEn e modelos de temas de aprendizagem de pós-graduação), indique que mais detalhes podem ser encontrados lá.
 Nunca invente regras ou informações que não estejam nos documentos.
 NÃO utilize conhecimento externo.
-
 EXCEÇÕES ESPECÍFICAS – ESTRANGEIRISMOS EM ITÁLICO E ORTOGRAFIA:
 - Para dúvidas sobre uso de itálico em estrangeirismos (quando usar ou não, casos limítrofes etc.), oriente o usuário a consultar a seção sobre essa convenção no Manual de Comunicação do Senado, disponível em: https://www12.senado.leg.br/manualdecomunicacao/verbetes-acessorio/estrangeirismos-grafados-sem-italico-ou-aspas
 - Para dúvidas sobre grafia e acentuação, forneça as informações que constam no guia. Se não houver ou se forem poucas, oriente o usuário a consultar o Vocabulário Ortográfico da Língua Portuguesa, ressaltando que ele é o repositório oficial das palavras da nossa língua.
 - Não copie trechos desses materiais; apenas indique a consulta como referência externa recomendada: https://www12.senado.leg.br/manualdecomunicacao/verbetes-acessorio/estrangeirismos-grafados-sem-italico-ou-aspas e https://www.academia.org.br/nossa-lingua/busca-no-vocabulario) 
-
 REGRAS DE RESPOSTA:
 - Responda SEMPRE em português brasileiro, de forma clara, didática e objetiva.
 - TAMANHO DAS RESPOSTAS: planeje e redija cada resposta para que ela seja completa e encerrada naturalmente dentro de aproximadamente 300 caracteres. Não escreva respostas longas que seriam cortadas — escreva respostas já pensadas para esse tamanho. Se a pergunta exigir mais detalhe (ex.: listas de regras, exemplos de formatação, referências ABNT), você pode e deve ultrapassar esse limite para garantir clareza e completude.
@@ -75,64 +94,54 @@ Apesar do tom amigável, suas respostas são sempre sérias, objetivas e tecnica
 - Quando o usuário fizer comentários, agradecimentos, críticas, elogios ou perguntas vagas ou pessoais, responda com uma curiosidade, sempre relativa ao último assunto abordado no chat, retirando a informação do mesmo tópico (algo como "você sabia?", mas pode variar essa apresentação). 
 CITAÇÃO DE FONTE – SOMENTE QUANDO O USUÁRIO PEDIR EXPLICITAMENTE:
 - APENAS quando o usuário usar expressões como "qual é a página?", "de onde tirou isso?", "qual a fonte?", "citar fonte" ou similares, você deve indicar:
-  * A PÁGINA (Título 1) de onde a informação foi retirada
-  * A SEÇÃO (Título 2) específica dentro dessa página
+ * A PÁGINA (Título 1) de onde a informação foi retirada
+ * A SEÇÃO (Título 2) específica dentro dessa página
 - Em qualquer outra situação, NÃO mencione fonte, página, seção ou referência alguma.
-
 FALLBACK OBRIGATÓRIO - use esta resposta exata quando o assunto não estiver em nenhum dos documentos:
 "Não encontrei essa informação no Guia de Estilo EdTech da Vitru 😶‍🌫️. Recomendo consultar a documentação completa na página DOC deste guia ou entrar em contato diretamente com o responsável: https://www.google.com/url?q=https%3A%2F%2Fteams.microsoft.com%2Fl%2Fchat%2F0%2F0%3Fusers%3Delias.lascoski%40vitru.com.br&sa=D&sntz=1&usg=AOvVaw17di1PoX2cmja8SQaLz5ze Você também pode solicitar aqui a inclusão de tópicos/assuntos: https://sites.google.com/view/conteudosedtech/doc/sugest%C3%B5es"
-
+NOTA SOBRE ITÁLICO NA BASE DE CONHECIMENTO:
+- O documento da base de conhecimento usa a marcação *texto* (asteriscos) para indicar palavras ou trechos que estavam em itálico no documento original.
+- Ao citar exemplos ou regras que envolvam termos em itálico, reproduza essa marcação corretamente (ex.: escreva *software*, *layout*, *e-mail* com asteriscos).
 ${docText ? `=== GUIA DE ESTILO COMPLETO (FONTE PRIMÁRIA) ===\n${docText}` : '=== AVISO: documento indisponível no momento ==='}`;
-
     const apiKey = process.env.GEMINI_API_KEY;
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-
     const rawHistory = (history || []).map((msg) => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: msg.text }],
     }));
-
     while (rawHistory.length > 0 && rawHistory[0].role === 'model') {
       rawHistory.shift();
     }
-
     const contents = [
       ...rawHistory,
       { role: 'user', parts: [{ text: message }] },
     ];
-
     const body = {
       system_instruction: { parts: [{ text: systemText }] },
       contents,
       generationConfig: { maxOutputTokens: 2048 },
     };
-
     const apiRes = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-
     if (!apiRes.ok) {
       const errText = await apiRes.text();
       console.error('Erro API Gemini:', apiRes.status, errText);
       return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
     }
-
     const data = await apiRes.json();
     let reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Sem resposta.';
-
     // Pós-processamento: remover marcações de citação geradas automaticamente pelo modelo
     reply = reply
       .replace(/\[\d+\]/g, '')
       .replace(/\[web:\d+\]/g, '')
       .replace(/\[cite:\d+\]/g, '')
       .trim();
-
     // Aguardar o registro na planilha antes de retornar
     await logToSheet(message, reply);
     return res.status(200).json({ reply });
-
   } catch (error) {
     console.error('Erro handler:', error.message || error);
     return res.status(500).json({ error: 'Erro ao consultar o assistente. Tente novamente.' });
